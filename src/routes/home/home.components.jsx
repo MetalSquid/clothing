@@ -1,4 +1,5 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import Directory from '../../components/directory/directory.component';
 
 function Home () {
@@ -33,6 +34,7 @@ function Home () {
 
     return (
         <div className="Home">
+            <Outlet />
             <Directory categories={categories} />
         </div>
     );
