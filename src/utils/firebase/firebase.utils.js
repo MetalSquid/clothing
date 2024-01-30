@@ -1,20 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import {
     getAuth,
-    signInWithPopup,
     signInWithRedirect,
+    signInWithPopup,
     GoogleAuthProvider,
     createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
 } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
-import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc
-} from 'firebase/firestore'
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAp5XHv8HL5lKFo8Ws-bBDK_cVLdd9sbp8",
     authDomain: "portfolio-clothing.firebaseapp.com",
@@ -24,27 +20,31 @@ const firebaseConfig = {
     appId: "1:121380193377:web:7d682c21ea58e567555620"
 };
 
-// Initialize Firebase
-const firebaseapp = initializeApp(firebaseConfig);
+const firebaseApp = initializeApp(firebaseConfig);
 
 const googleProvider = new GoogleAuthProvider();
 
 googleProvider.setCustomParameters({
-    prompt: 'select_account'
+    prompt: 'select_account',
 });
 
 export const auth = getAuth();
-export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
-export const signInWithGoogleRedirect = () => signInWithRedirect(auth, googleProvider)
+export const signInWithGooglePopup = () =>
+    signInWithPopup(auth, googleProvider);
+export const signInWithGoogleRedirect = () =>
+    signInWithRedirect(auth, googleProvider);
 
 export const db = getFirestore();
 
-export const createUserDocumentFromAuth = async (userAuth) => {
-    const userDocRef = doc(db, 'users', 'userAuth.uid');
+export const createUserDocumentFromAuth = async (
+    userAuth,
+    additionalInformation = {}
+) => {
+    if (!userAuth) return;
 
-    console.log(userDocRef);
+    const userDocRef = doc(db, 'users', userAuth.uid);
 
-    const userSnapshot = await (getDoc(userDocRef));
+    const userSnapshot = await getDoc(userDocRef);
 
     if (!userSnapshot.exists()) {
         const { displayName, email } = userAuth;
@@ -54,23 +54,35 @@ export const createUserDocumentFromAuth = async (userAuth) => {
             await setDoc(userDocRef, {
                 displayName,
                 email,
-                createdAt
+                createdAt,
+                ...additionalInformation,
             });
         } catch (error) {
-            console.log('error creating the user', error.message)
+            console.log('error creating the user', error.message);
         }
     }
-    // if user data does not exist
-    // create / set the document with data from userAuth in the collection
 
-    // if user data exists
     return userDocRef;
 };
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
     if (!email || !password) return;
 
-    return await createUserWithEmailAndPassword(auth, email, password)
-}
+    return await createUserWithEmailAndPassword(auth, email, password);
+};
+
+export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+    if (!email || !password) return;
+
+    return await signInWithEmailAndPassword(auth, email, password);
+};
+
+export const signOutUser = async () => await signOut(auth);
+
+export const onAuthStateChangedListener = (callback) =>
+    onAuthStateChanged(auth, callback);
+
+
+
 
 
